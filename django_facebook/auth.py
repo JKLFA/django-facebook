@@ -7,10 +7,13 @@ FACEBOOK_EXTENDED_PERMISSIONS = getattr(settings, 'FACEBOOK_EXTENDED_PERMISSIONS
 
 class FacebookBackend(ModelBackend):
     """ Authenticate a facebook user. """
-    def authenticate(self, fb_uid=None, fb_object=None):
+    def authenticate(self, fb_uid=None, fb_object=None, request=None):
         """ If we receive a facebook uid then the cookie has already been validated. """
         if fb_uid:
             user, created = User.objects.get_or_create(username=fb_uid)
+
+            if request and created:
+                request.session['new_facebook_user'] = True
 
             # Consider replacing this synchronous data request (out to Facebook
             # and back) with an asynchronous request, using Celery or similar tool

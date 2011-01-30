@@ -13,6 +13,7 @@ the following settings:
     # Custom settings
     FACEBOOK_PREPOPULATE_USER_DATA = False
     FACEBOOK_EXTENDED_PERMISSIONS = []  # Ex: ['email', 'user_birthday']
+    FACEBOOK_FIRST_LOGIN_REDIRECT = None  # Ex: '/welcome'
     
     # Optionally for debugging
     FACEBOOK_DEBUG_COOKIE = ''
@@ -95,6 +96,10 @@ To use the backend, add this to your AUTHENTICATION_BACKENDS:
 Don't forget to include the default backend if you want to use standard
 logins for users as well:
     'django.contrib.auth.backends.ModelBackend'
+
+If you would like to redirect the user to a welcome page or similar on the
+first time they log in, use the ``FACEBOOK_FIRST_LOGIN_REDIRECT`` setting:
+    FACEBOOK_FIRST_LOGIN_REDIRECT = None  # Ex: '/welcome'
 
 
 Decorators:

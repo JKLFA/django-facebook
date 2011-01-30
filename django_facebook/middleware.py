@@ -1,8 +1,11 @@
 from django.conf import settings
 from django.contrib import auth
+from django.http import HttpResponseRedirect
+
 import facebook
 import datetime
 
+FACEBOOK_FIRST_LOGIN_REDIRECT = getattr(settings, 'FACEBOOK_FIRST_LOGIN_REDIRECT', None)
 
 class DjangoFacebook(object):
     """ Simple accessor object for the Facebook user. """
@@ -60,10 +63,14 @@ class FacebookMiddleware(object):
         request.facebook = DjangoFacebook(fb_user) if fb_user else None
 
         if fb_user and request.user.is_anonymous():
-            user = auth.authenticate(fb_uid=fb_user['uid'], fb_object=request.facebook)
+            user = auth.authenticate(fb_uid=fb_user['uid'], fb_object=request.facebook, request=request)
             if user:
                 user.last_login = datetime.datetime.now()
                 user.save()
                 request.user = user
+
+            if request.session.get('new_facebook_user', None) and FACEBOOK_FIRST_LOGIN_REDIRECT:
+                del request.session['new_facebook_user']
+                return HttpResponseRedirect(FACEBOOK_FIRST_LOGIN_REDIRECT)
 
         return None
