@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.backends import ModelBackend
-import re
 
 from models import FacebookProfile
 
@@ -30,54 +29,7 @@ class FacebookBackend(ModelBackend):
                     
                 user.save()
 
-                profile = FacebookProfile()
-
-                profile.user = user
-
-                if 'birthday' in fb_user:
-                    match = re.search('(\d+)/(\d+)/(\d+)', fb_user['birthday'])
-                    if match:
-                        profile.birthday = "%s-%s-%s" % (match.group(3), match.group(1), match.group(2))
-
-                profile.uid = fb_user['id']
-                profile.name = fb_user['name']
-
-                if 'username' in fb_user:
-                    profile.username = fb_user['username']
-
-                if 'first_name' in fb_user:
-                    profile.first_name = fb_user['first_name']
-
-                if 'middle_name' in fb_user:
-                    profile.middle_name = fb_user['middle_name']
-
-                if 'last_name' in fb_user:
-                    profile.last_name = fb_user['last_name']
-
-                if 'link' in fb_user:
-                    profile.link = fb_user['link']
-
-                if 'hometown' in fb_user:
-                    profile.hometown = fb_user['hometown']['name']
-
-                if 'bio' in fb_user:
-                    profile.bio = fb_user['bio']
-
-                if 'gender' in fb_user:
-                    profile.gender = fb_user['gender'][0].upper()
-
-                if 'website' in fb_user:
-                    profile.website = fb_user['website']
-
-                if 'locale' in fb_user:
-                    profile.locale = fb_user['locale']
-
-                if 'timezone' in fb_user:
-                    profile.timezone = fb_user['timezone']
-
-                profile.modified = fb_user['updated_time'].replace('T', ' ').replace('+', '.')
-
-                profile.save()
+                profile = FacebookProfile.fromFacebookObject(fb_user, user)
 
             return user
         return None
