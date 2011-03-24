@@ -20,6 +20,11 @@ class FacebookProfile(models.Model):
     bio         = models.TextField(null=True, blank=True)
     gender      = models.CharField(max_length=1, choices=GENDERS, null=True, blank=True)
     modified    = models.DateTimeField()
+    website     = models.CharField(max_length=255, null=True, blank=True)
+
+    @property
+    def websites(self):
+        return self.website.split("\n")
 
     def __unicode__(self):
         return u"%s" % (self.name)
