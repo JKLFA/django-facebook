@@ -7,7 +7,7 @@ GENDERS = (
 )
 
 class FacebookProfile(models.Model):
-    user        = models.ForeignKey(User)
+    user        = models.ForeignKey(User, related_name="fb_profile")
     uid         = models.CharField(max_length=31)
     name        = models.CharField(max_length=100)
     first_name  = models.CharField(max_length=31)
