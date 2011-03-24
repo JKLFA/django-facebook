@@ -42,6 +42,9 @@ class FacebookBackend(ModelBackend):
                 profile.uid = fb_user['id']
                 profile.name = fb_user['name']
 
+                if 'username' in fb_user:
+                    profile.username = fb_user['username']
+
                 if 'first_name' in fb_user:
                     profile.first_name = fb_user['first_name']
 
