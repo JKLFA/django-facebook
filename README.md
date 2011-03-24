@@ -92,7 +92,7 @@ account is automatically created or retrieved based on the facebook UID.
 
 To use the backend, add this to your AUTHENTICATION_BACKENDS:
     'django_facebook.auth.FacebookBackend'
-  
+
 Don't forget to include the default backend if you want to use standard
 logins for users as well:
     'django.contrib.auth.backends.ModelBackend'
@@ -100,6 +100,22 @@ logins for users as well:
 If you would like to redirect the user to a welcome page or similar on the
 first time they log in, use the ``FACEBOOK_FIRST_LOGIN_REDIRECT`` setting:
     FACEBOOK_FIRST_LOGIN_REDIRECT = None  # Ex: '/welcome'
+
+
+Signals:
+-------
+Django provides a signals infrastructure to allow decoupled applications to get
+notified when actions occur elsewhere in the framework.
+
+The following signals are sent on Facebook actions:
+
+* ``fb_user_login``
+
+  Sent every time a user accesses a page while logged in to your site with Facebook.  Sent no more than once every 10 seconds.
+
+* ``fb_user_first_login``
+
+  Sent the first time a Facebook user logs in.  A new ``django.contrib.auth`` ``User`` is created as a result, with username of their Facebook id.
 
 
 Decorators:

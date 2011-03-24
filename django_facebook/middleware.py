@@ -1,9 +1,13 @@
+from datetime import datetime, timedelta
+
 from django.conf import settings
 from django.contrib import auth
 from django.http import HttpResponseRedirect
 
 import facebook
-import datetime
+
+from django_facebook.signals import fb_user_login, fb_user_first_login
+
 
 FACEBOOK_FIRST_LOGIN_REDIRECT = getattr(settings, 'FACEBOOK_FIRST_LOGIN_REDIRECT', None)
 
@@ -65,12 +69,17 @@ class FacebookMiddleware(object):
         if fb_user and request.user.is_anonymous():
             user = auth.authenticate(fb_uid=fb_user['uid'], fb_object=request.facebook, request=request)
             if user:
-                user.last_login = datetime.datetime.now()
-                user.save()
+                # only update last_login if there's a 10 second gap
+                if datetime.now() > user.last_login + timedelta(seconds=10):
+                    user.last_login = datetime.now()
+                    user.save()
+                    fb_user_login.send(sender=user)
                 request.user = user
 
             if request.session.get('new_facebook_user', None) and FACEBOOK_FIRST_LOGIN_REDIRECT:
                 del request.session['new_facebook_user']
+                fb_user_first_login.send(sender=user)
+                fb_user_login.send(sender=user)
                 return HttpResponseRedirect(FACEBOOK_FIRST_LOGIN_REDIRECT)
 
         return None
