@@ -20,6 +20,24 @@ the following settings:
     FACEBOOK_DEBUG_TOKEN = ''
 
 
+Settings:
+--------
+
+* ``FACEBOOK_PREPOPULATE_USER_DATA``
+
+  * Fill in ``user.email``, ``user.first_name``, and ``user.last_name`` with Facebook data
+  * Save other information from the Graph API to ``user.fb_profile``:
+     1. ``uid``
+     2. ``name``
+     3. ``first_name``
+     4. ``last_name``
+     5. ``link`` (URL for the user's profile page)
+     6. ``birthday``
+     7. ``hometown``
+     8. ``bio``
+     9. ``gender``
+     10. ``updated_time`` (last time the user's profile was updated
+
 Templates:
 ---------
 A few helpers for using the Javascript SDK can be enabled by adding
