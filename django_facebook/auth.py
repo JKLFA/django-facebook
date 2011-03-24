@@ -1,6 +1,9 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.backends import ModelBackend
+import re
+
+from models import FacebookProfile
 
 FACEBOOK_PREPOPULATE_USER_DATA = getattr(settings, 'FACEBOOK_PREPOPULATE_USER_DATA', None)
 FACEBOOK_EXTENDED_PERMISSIONS = getattr(settings, 'FACEBOOK_EXTENDED_PERMISSIONS', None)
@@ -26,6 +29,43 @@ class FacebookBackend(ModelBackend):
                     user.email = fb_user['email']
                     
                 user.save()
+
+                profile = FacebookProfile()
+
+                profile.user = user
+
+                if 'birthday' in fb_user:
+                    match = re.search('(\d+)/(\d+)/(\d+)', fb_user['birthday'])
+                    if match:
+                        profile.birthday = "%s-%s-%s" % (match.group(3), match.group(1), match.group(2))
+
+                profile.uid = fb_user['id']
+                profile.name = fb_user['name']
+
+                if 'first_name' in fb_user:
+                    profile.first_name = fb_user['first_name']
+
+                if 'middle_name' in fb_user:
+                    profile.middle_name = fb_user['middle_name']
+
+                if 'last_name' in fb_user:
+                    profile.last_name = fb_user['last_name']
+
+                if 'link' in fb_user:
+                    profile.link = fb_user['link']
+
+                if 'hometown' in fb_user:
+                    profile.hometown = fb_user['hometown']['name']
+
+                if 'bio' in fb_user:
+                    profile.bio = fb_user['bio']
+
+                if 'gender' in fb_user:
+                    profile.gender = fb_user['gender']
+
+                profile.modified = fb_user['updated_time'].replace('T', ' ').replace('+', '.')
+
+                profile.save()
 
             return user
         return None
