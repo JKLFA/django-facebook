@@ -21,6 +21,8 @@ class FacebookProfile(models.Model):
     gender      = models.CharField(max_length=1, choices=GENDERS, null=True, blank=True)
     modified    = models.DateTimeField()
     website     = models.CharField(max_length=255, null=True, blank=True)
+    locale      = models.CharField(max_length=32, null=True, blank=True)
+    timezone    = models.IntegerField(null=True, blank=True)
 
     @property
     def websites(self):

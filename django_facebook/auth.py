@@ -69,6 +69,12 @@ class FacebookBackend(ModelBackend):
                 if 'website' in fb_user:
                     profile.website = fb_user['website']
 
+                if 'locale' in fb_user:
+                    profile.locale = fb_user['locale']
+
+                if 'timezone' in fb_user:
+                    profile.timezone = fb_user['timezone']
+
                 profile.modified = fb_user['updated_time'].replace('T', ' ').replace('+', '.')
 
                 profile.save()
