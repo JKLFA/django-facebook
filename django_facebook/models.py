@@ -220,11 +220,3 @@ class School(models.Model):
 
     def __unicode__(self):
         return u"%s" % (self.name or self.sid)
-
-class FacebookFriend(models.Model):
-    friend_of = models.ForeignKey(FacebookProfile)
-    name      = models.CharField(max_length=100)
-    uid       = models.CharField(max_length=31)
-
-    class Meta:
-        unique_together = (('friend_of', 'uid'),)
