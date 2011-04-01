@@ -120,6 +120,13 @@ class Attended(models.Model):
     year        = models.CharField(max_length=8)
     type        = models.CharField(max_length=32)
 
+    def is_alum(self):
+        """ If graduating year was before now or graduated this year and it's after May 15 """
+        currentYear = int(datetime.today().strftime('%Y'))
+        return int(self.year) <  currentYear or \
+               int(self.year) == currentYear and \
+               datetime.now() > datetime(currentYear, 5, 15)
+
     @classmethod
     def fromFacebookObject(cls, fb_att, profile):
         try:
