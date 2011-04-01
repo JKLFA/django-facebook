@@ -131,7 +131,7 @@ The following signals are sent on Facebook actions:
 
   Sent every time a user accesses a page while logged in to your site with Facebook.  Sent no more than once every 10 seconds.
 
-* ``fb_user_first_login``
+* ``fb_user_registration``
 
   Sent the first time a Facebook user logs in.  A new ``django.contrib.auth`` ``User`` is created as a result, with username of their Facebook id.
 

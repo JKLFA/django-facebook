@@ -6,7 +6,7 @@ from django.http import HttpResponseRedirect
 
 import facebook
 
-from django_facebook.signals import fb_user_login, fb_user_first_login
+from django_facebook.signals import fb_user_login, fb_user_registration
 
 
 FACEBOOK_FIRST_LOGIN_REDIRECT = getattr(settings, 'FACEBOOK_FIRST_LOGIN_REDIRECT', None)
@@ -78,7 +78,7 @@ class FacebookMiddleware(object):
 
             if request.session.get('new_facebook_user', None) and FACEBOOK_FIRST_LOGIN_REDIRECT:
                 del request.session['new_facebook_user']
-                fb_user_first_login.send(sender=user)
+                fb_user_registration.send(sender=user)
                 fb_user_login.send(sender=user)
                 return HttpResponseRedirect(FACEBOOK_FIRST_LOGIN_REDIRECT)
 
