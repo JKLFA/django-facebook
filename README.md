@@ -37,6 +37,7 @@ Settings:
      8. ``bio``
      9. ``gender``
      10. ``updated_time`` (last time the user's profile was updated
+  * This information is refreshed when the user logs back in, at most once per day.
 
 Templates:
 ---------

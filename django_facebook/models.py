@@ -1,8 +1,11 @@
+from datetime import datetime
 import re
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+
+from django_facebook import signals
 
 GENDERS = (
     ('M', 'Male'),
@@ -11,23 +14,34 @@ GENDERS = (
 
 class FacebookProfile(models.Model):
     user        = models.OneToOneField(User, related_name="fb_profile")
+    last_update = models.DateTimeField()
+
     uid         = models.CharField(max_length=31, unique=True)
+
+    # all optional data
     username    = models.CharField(max_length=64, null=True, blank=True)
-    name        = models.CharField(max_length=100)
-    first_name  = models.CharField(max_length=31)
+    name        = models.CharField(max_length=100, null=True, blank=True)
+    first_name  = models.CharField(max_length=31, null=True, blank=True)
     middle_name = models.CharField(max_length=31, null=True, blank=True)
-    last_name   = models.CharField(max_length=31)
+    last_name   = models.CharField(max_length=31, null=True, blank=True)
     link        = models.URLField(null=True, blank=True)
     birthday    = models.DateField(null=True, blank=True)
     hometown    = models.CharField(max_length=31, null=True, blank=True)
     bio         = models.TextField(null=True, blank=True)
     gender      = models.CharField(max_length=1, choices=GENDERS, null=True, blank=True)
-    modified    = models.DateTimeField()
+    modified    = models.DateTimeField(null=True, blank=True)
     website     = models.CharField(max_length=255, null=True, blank=True)
     locale      = models.CharField(max_length=32, null=True, blank=True)
     timezone    = models.IntegerField(null=True, blank=True)
 
     schools     = models.ManyToManyField('School', through='Attended')
+
+    def save(self, *args, **kwargs):
+        ''' On save, update last_update timestamp '''
+
+        self.last_update = datetime.now()
+        super(FacebookProfile, self).save(*args, **kwargs)
+
 
     @property
     def websites(self):
@@ -36,6 +50,49 @@ class FacebookProfile(models.Model):
     @property
     def newest_school(self):
         return self.attended_set.order_by('-year')[0]
+
+    def update(self, fb_user):
+        if self.uid != fb_user['id']:
+            raise TypeError("Attempted to update a Facebook User with another "
+                            "user's profile information")
+
+        self.name = fb_user['name']
+        self.modified = fb_user['updated_time'].replace('T', ' ').replace('+', '.')
+
+        if 'birthday' in fb_user:
+            match = re.search('(\d+)/(\d+)/(\d+)', fb_user['birthday'])
+            if match:
+                self.birthday = "%s-%s-%s" % (match.group(3), match.group(1), match.group(2))
+        if 'username' in fb_user:
+            self.username = fb_user['username']
+        if 'first_name' in fb_user:
+            self.first_name = fb_user['first_name']
+        if 'middle_name' in fb_user:
+            self.middle_name = fb_user['middle_name']
+        if 'last_name' in fb_user:
+            self.last_name = fb_user['last_name']
+        if 'link' in fb_user:
+            self.link = fb_user['link']
+        if 'hometown' in fb_user:
+            self.hometown = fb_user['hometown']['name']
+        if 'bio' in fb_user:
+            self.bio = fb_user['bio']
+        if 'gender' in fb_user:
+            self.gender = fb_user['gender'][0].upper()
+        if 'website' in fb_user:
+            self.website = fb_user['website']
+        if 'locale' in fb_user:
+            self.locale = fb_user['locale']
+        if 'timezone' in fb_user:
+            self.timezone = fb_user['timezone']
+
+        if 'education' in fb_user:
+            for attended in fb_user['education']:
+                a = Attended.fromFacebookObject(attended, self)
+
+        signals.fb_user_updated.send(self)
+
+        self.save()
 
     @classmethod
     def fromFacebookObject(cls, fb_user, user):
@@ -47,43 +104,9 @@ class FacebookProfile(models.Model):
         profile = FacebookProfile()
 
         profile.user = user
-        profile.uid = fb_user['id']
-        profile.name = fb_user['name']
-        profile.modified = fb_user['updated_time'].replace('T', ' ').replace('+', '.')
-
-        if 'birthday' in fb_user:
-            match = re.search('(\d+)/(\d+)/(\d+)', fb_user['birthday'])
-            if match:
-                profile.birthday = "%s-%s-%s" % (match.group(3), match.group(1), match.group(2))
-        if 'username' in fb_user:
-            profile.username = fb_user['username']
-        if 'first_name' in fb_user:
-            profile.first_name = fb_user['first_name']
-        if 'middle_name' in fb_user:
-            profile.middle_name = fb_user['middle_name']
-        if 'last_name' in fb_user:
-            profile.last_name = fb_user['last_name']
-        if 'link' in fb_user:
-            profile.link = fb_user['link']
-        if 'hometown' in fb_user:
-            profile.hometown = fb_user['hometown']['name']
-        if 'bio' in fb_user:
-            profile.bio = fb_user['bio']
-        if 'gender' in fb_user:
-            profile.gender = fb_user['gender'][0].upper()
-        if 'website' in fb_user:
-            profile.website = fb_user['website']
-        if 'locale' in fb_user:
-            profile.locale = fb_user['locale']
-        if 'timezone' in fb_user:
-            profile.timezone = fb_user['timezone']
-
-        # Must have a primary key before creating M2M relationships
         profile.save()
 
-        if 'education' in fb_user:
-            for attended in fb_user['education']:
-                a = Attended.fromFacebookObject(attended, profile)
+        profile.update(fb_user)
 
         return profile
 

@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.backends import ModelBackend
@@ -13,6 +15,9 @@ class FacebookBackend(ModelBackend):
         """ If we receive a facebook uid then the cookie has already been validated. """
         if fb_uid:
             user, created = User.objects.get_or_create(username=fb_uid)
+
+            if user.fb_profile.last_update < datetime.now() - timedelta(1):
+                user.fb_profile.update(fb_object.graph.get_object(u'me'))
 
             if request and created:
                 request.session['new_facebook_user'] = True
