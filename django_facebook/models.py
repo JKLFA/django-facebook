@@ -107,6 +107,7 @@ class FacebookProfile(models.Model):
         profile = FacebookProfile()
 
         profile.user = user
+        profile.uid = fb_user['id']
         profile.save()
 
         profile.update(fb_user)
