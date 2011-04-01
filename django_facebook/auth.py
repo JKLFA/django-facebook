@@ -16,9 +16,6 @@ class FacebookBackend(ModelBackend):
         if fb_uid:
             user, created = User.objects.get_or_create(username=fb_uid)
 
-            if user.fb_profile.last_update < datetime.now() - timedelta(1):
-                user.fb_profile.update(fb_object.graph.get_object(u'me'))
-
             if request and created:
                 request.session['new_facebook_user'] = True
 
@@ -35,6 +32,10 @@ class FacebookBackend(ModelBackend):
                 user.save()
 
                 profile = FacebookProfile.fromFacebookObject(fb_user, user)
+
+            if FACEBOOK_PREPOPULATE_USER_DATA and \
+               user.fb_profile.last_update < datetime.now() - timedelta(1):
+                user.fb_profile.update(fb_object.graph.get_object(u'me'))
 
             return user
         return None
