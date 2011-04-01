@@ -49,7 +49,10 @@ class FacebookProfile(models.Model):
 
     @property
     def newest_school(self):
-        return self.attended_set.order_by('-year')[0]
+        if self.attended_set.count() > 1:
+            return self.attended_set.order_by('-year')[0]
+        else:
+            return None
 
     def update(self, fb_user):
         if self.uid != fb_user['id']:
