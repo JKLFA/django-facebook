@@ -121,8 +121,8 @@ class Attended(models.Model):
     profile     = models.ForeignKey(FacebookProfile)
     school      = models.ForeignKey('School')
     concentrations = models.ManyToManyField('Concentration', null=True, blank=True)
-    year        = models.CharField(max_length=8)
-    type        = models.CharField(max_length=32)
+    year        = models.CharField(max_length=8, null=True, blank=True)
+    type        = models.CharField(max_length=32, null=True, blank=True)
 
     def is_alum(self):
         """ If graduating year was before now or graduated this year and it's after May 15 """
@@ -142,9 +142,13 @@ class Attended(models.Model):
             pass
 
         a = Attended()
-        a.school = School.fromFacebookObject(fb_att['school'])
-        a.type = fb_att['type']
-        a.year = fb_att['year']['name']
+        if 'school' in fb_att:
+            a.school = School.fromFacebookObject(fb_att['school'])
+        if 'type' in fb_att:
+            a.type = fb_att['type']
+        if 'year' in fb_att:
+            if 'name' in fb_att['year']:
+                a.year = fb_att['year']['name']
         a.profile = profile
 
         # must have a primary key before creating M2M relationships
@@ -153,7 +157,8 @@ class Attended(models.Model):
         if 'concentration' in fb_att:
             for c in fb_att['concentration']:
                 conc = Concentration.fromFacebookObject(c)
-                a.concentrations.add(conc)
+                if conc:
+                    a.concentrations.add(conc)
             a.save()
         return a
 
@@ -170,7 +175,7 @@ class Attended(models.Model):
 
 class Concentration(models.Model):
     cid         = models.CharField(max_length=31, unique=True)
-    name        = models.CharField(max_length=64)
+    name        = models.CharField(max_length=64, null=True, blank=True)
     link        = models.URLField(null=True, blank=True)
 
     @classmethod
@@ -185,8 +190,10 @@ class Concentration(models.Model):
             pass
 
         c = Concentration()
-        c.cid = fb_con['id']
-        c.name = fb_con['name']
+        if 'id' in fb_con:
+            c.cid = fb_con['id']
+        if 'name' in fb_con:
+            c.name = fb_con['name']
         if 'link' in fb_con:
             c.link = fb_con['link']
         c.save()
