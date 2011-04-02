@@ -19,9 +19,15 @@ class FacebookBackend(ModelBackend):
             if request and created:
                 request.session['new_facebook_user'] = True
 
+            try:
+                if user.fb_profile:
+                    exists = True
+            except:
+                exists = False
+
             # Consider replacing this synchronous data request (out to Facebook
             # and back) with an asynchronous request, using Celery or similar tool
-            if FACEBOOK_PREPOPULATE_USER_DATA and created and fb_object:
+            if FACEBOOK_PREPOPULATE_USER_DATA and (created or not exists) and fb_object:
                 fb_user = fb_object.graph.get_object(u'me')
                 user.first_name = fb_user['first_name']
                 user.last_name  = fb_user['last_name']
@@ -33,7 +39,7 @@ class FacebookBackend(ModelBackend):
 
                 profile = FacebookProfile.fromFacebookObject(fb_user, user)
 
-            if FACEBOOK_PREPOPULATE_USER_DATA and \
+            if FACEBOOK_PREPOPULATE_USER_DATA and fb_object and \
                user.fb_profile.last_update < datetime.now() - timedelta(1):
                 user.fb_profile.update(fb_object.graph.get_object(u'me'))
 
