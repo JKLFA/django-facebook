@@ -134,10 +134,15 @@ class Attended(models.Model):
     @classmethod
     def fromFacebookObject(cls, fb_att, profile):
         try:
-            return Attended.objects.get(profile=profile,
-                                        school=School.fromFacebookObject(fb_att['school']),
-                                        year=fb_att['year']['name'],
-                                        type=fb_att['type'])
+            dict = { "profile": profile, }
+            if 'school' in fb_att:
+                dict['school'] = School.fromFacebookObject(fb_att['school'])
+            if 'year' in fb_att:
+                if 'name' in fb_att['year']:
+                    dict['year'] = fb_att['year']['name']
+            if 'type' in fb_att:
+                dict['type'] = fb_att['type']
+            return Attended.objects.get(**dict)
         except ObjectDoesNotExist:
             pass
 
